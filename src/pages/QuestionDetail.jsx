@@ -8,6 +8,9 @@ import {
   postComment,
   updateQuestion,
   deleteQuestion,
+  updateComment,
+  deleteComment,
+  likeComment, // 추가
 } from "../api/QuestionDetailApi";
 import "../styles/style.css";
 import BigButton from "../components/global/BigButton";
@@ -20,20 +23,31 @@ const QuestionDetail = () => {
   const [input, setInput] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState("");
-  const [editedTitle, setEditedTitle] = useState(""); // 제목 상태 추가
+  const [editedTitle, setEditedTitle] = useState("");
+
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editingContent, setEditingContent] = useState("");
+
+  const fetchComments = async () => {
+    try {
+      const commentList = await getComments(number);
+      const sortedComments = commentList.sort(
+        (a, b) => new Date(b.created_at) - new Date(a.created_at)
+      );
+      setComments(sortedComments);
+    } catch (error) {
+      console.error("댓글 불러오기 실패:", error);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const question = await getQuestionDetail(number);
-        const commentList = await getComments(number);
-        const sortedComments = commentList.sort(
-          (a, b) => new Date(b.created_at) - new Date(a.created_at)
-        );
         setQuestionInfo(question);
         setEditedContent(question.content);
-        setEditedTitle(question.title); // 제목 초기값 세팅
-        setComments(sortedComments);
+        setEditedTitle(question.title);
+        await fetchComments();
       } catch (error) {
         console.error(error);
         setQuestionInfo(null);
@@ -60,12 +74,7 @@ const QuestionDetail = () => {
 
     try {
       await postComment(number, newComment);
-
-      const commentList = await getComments(number);
-      const sortedComments = commentList.sort(
-        (a, b) => new Date(b.created_at) - new Date(a.created_at)
-      );
-      setComments(sortedComments);
+      await fetchComments();
       setInput("");
     } catch (error) {
       console.error(error);
@@ -119,15 +128,70 @@ const QuestionDetail = () => {
     }
   };
 
+  const handleDeleteComment = async (commentId) => {
+    if (window.confirm("댓글을 삭제하시겠습니까?")) {
+      try {
+        await deleteComment(commentId);
+        await fetchComments();
+      } catch (err) {
+        console.error(err);
+        alert("댓글 삭제 실패");
+      }
+    }
+  };
+
+  const startEditComment = (comment) => {
+    setEditingCommentId(comment.comment_id);
+    setEditingContent(comment.content);
+  };
+
+  const cancelEditComment = () => {
+    setEditingCommentId(null);
+    setEditingContent("");
+  };
+
+  const saveEditComment = async () => {
+    try {
+      await updateComment(editingCommentId, {
+        content: editingContent,
+      });
+      await fetchComments();
+      setEditingCommentId(null);
+      setEditingContent("");
+    } catch (err) {
+      console.error(err);
+      alert("댓글 수정 실패");
+    }
+  };
+
+  const handleLikeComment = async (commentId) => {
+    try {
+      const result = await likeComment(commentId); // ← { comment_id, is_liked }
+
+      setComments((prevComments) =>
+        prevComments.map((comment) => {
+          if (comment.comment_id === result.comment_id) {
+            return {
+              ...comment,
+              is_liked: result.is_liked,
+              like_count: comment.like_count + (result.is_liked ? 1 : -1),
+            };
+          }
+          return comment;
+        })
+      );
+    } catch (error) {
+      console.error("댓글 좋아요 실패:", error);
+      alert("좋아요에 실패했습니다.");
+    }
+  };
+
   return (
     <div className="bg-white px-120 flex flex-col justify-center items-center">
       {!questionInfo ? (
-        <p className="text-center text-gray-500">
-          질문 정보를 불러올 수 없습니다.
-        </p>
+        <p className="text-center text-gray-500">질문 정보를 불러올 수 없습니다.</p>
       ) : (
         <>
-          {/* 질문 정보 테이블 */}
           <table className="question-table border w-full text-sm mb-6">
             <tbody>
               <tr className="border-b">
@@ -153,14 +217,10 @@ const QuestionDetail = () => {
                 <td className="font-semibold">문제 번호</td>
                 <td>{questionInfo.question_id}</td>
                 <td className="font-semibold">작성일</td>
-                <td>
-                  {questionInfo.created_at.slice(0,10).replaceAll("-","/")}
-                </td>
+                <td>{questionInfo.created_at.slice(0, 10).replaceAll("-", "/")}</td>
               </tr>
             </tbody>
           </table>
-
-          {/* 질문 내용 */}
 
           {isEditing ? (
             <div className="w-full">
@@ -179,21 +239,16 @@ const QuestionDetail = () => {
             </div>
           )}
 
-          {/* 액션 버튼 */}
           <div className="flex justify-end gap-8 w-full py-16">
-            <BigButton
-              text={isEditing ? "저장" : "수정"}
-              onClick={handleEdit}
-              fill
-            />
+            <BigButton text={isEditing ? "저장" : "수정"} onClick={handleEdit} fill />
             <BigButton text="삭제" onClick={handleDelete} />
           </div>
         </>
       )}
 
-      <div className="w-full ">
+      <div className="w-full">
         <h3 className="text-lg mb-16">댓글</h3>
-        {/* 댓글 입력 */}
+
         <div className="comment-input flex my-16 w-full">
           <input
             type="text"
@@ -211,58 +266,70 @@ const QuestionDetail = () => {
           </button>
         </div>
 
-        {/* 댓글 목록 */}
-        <div className="">
-          <ul>
-            {comments.map((comment) => {
-              console.log(comment);
-              return (
-                <li
-                  key={comment.comment_id}
-                  className="border-b-1 border-gray-300 p-8"
-                >
-                  <div className="flex gap-4 items-center mb-8">
-                    <p className="text-primary font-semibold">
-                      {comment.username}
-                    </p>
-                    <span className="text-xs text-gray-500">
-                      · {comment.created_at.slice(0, 10).replaceAll('-',"/")}
-                    </span>
+        <ul>
+          {comments.map((comment) => (
+            <li key={comment.comment_id} className="border-b-1 border-gray-300 p-8">
+              <div className="flex justify-between items-center mb-2">
+                <div className="flex gap-2 items-center">
+                  <p className="text-primary font-semibold">{comment.username}</p>
+                  <span className="text-xs text-gray-500">
+                    · {comment.created_at.slice(0, 10).replaceAll("-", "/")}
+                  </span>
+                </div>
+                <div className="flex gap-2 text-sm">
+                  <button
+                    onClick={() => startEditComment(comment)}
+                    className="border border-blue-500 text-blue-500 rounded px-2 py-0.5 hover:bg-blue-50 cursor-pointer"
+                  >
+                    수정
+                  </button>
+                  <button
+                    onClick={() => handleDeleteComment(comment.comment_id)}
+                    className="border border-red-500 text-red-500 rounded px-2 py-0.5 hover:bg-red-50 cursor-pointer"
+                  >
+                    삭제
+                  </button>
+                  <button
+                    onClick={() => handleLikeComment(comment.comment_id)}
+                    className={`border rounded px-2 py-0.5 cursor-pointer transition-all ${
+                      comment.is_liked
+                        ? "border-green-600 text-green-600 bg-green-50"
+                        : "border-green-500 text-green-500 hover:bg-green-50"
+                    }`}
+                  >
+                    👍 {comment.like_count ?? 0}
+                  </button>
+                </div>
+              </div>
+              {editingCommentId === comment.comment_id ? (
+                <div className="mt-2 flex flex-col gap-2">
+                  <input
+                    type="text"
+                    value={editingContent}
+                    onChange={(e) => setEditingContent(e.target.value)}
+                    className="border rounded p-2"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={saveEditComment}
+                      className="text-blue-500 border border-blue-500 px-2 py-1 rounded hover:bg-blue-50"
+                    >
+                      저장
+                    </button>
+                    <button
+                      onClick={cancelEditComment}
+                      className="text-gray-500 border border-gray-300 px-2 py-1 rounded hover:bg-gray-100"
+                    >
+                      취소
+                    </button>
                   </div>
-                  <div className="text-black">{comment.content}</div>
-                </li>
-              ); 
-            })}
-          </ul>
-        </div>
-        {/* <table
-          className="comment-table w-full text-sm border-t"
-          style={{ tableLayout: "fixed" }}
-        >
-          <colgroup>
-            <col style={{ width: "70%" }} />
-            <col style={{ width: "15%" }} />
-            <col style={{ width: "15%" }} />
-          </colgroup>
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="p-2">내용</th>
-              <th className="p-2">작성자</th>
-              <th className="p-2">작성일</th>
-            </tr>
-          </thead>
-          <tbody>
-            {comments.map((comment) => (
-              <tr key={comment.comment_id} className="border-t">
-                <td className="p-2">{comment.content}</td>
-                <td className="p-2">{comment.username}</td>
-                <td className="p-2">
-                  {new Date(comment.created_at).toLocaleString().slice(0, 12)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table> */}
+                </div>
+              ) : (
+                <div className="text-black mt-2">{comment.content}</div>
+              )}
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );

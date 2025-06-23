@@ -4,15 +4,15 @@ export async function fetchQuestions(category, searchTerm) {
     try {
         // 카테고리가 "전체"인 경우 쿼리스트링 없이 요청
         const query = category === "전체" ? "" : `?category=${encodeURIComponent(category)}`;
-        const response = await fetch(`/api/comm${query}`);
+        const response = await fetch(`/api/api/post/v1/posts${query}`);
 
         const json = await response.json();
 
-        if (!json.isSuccess || !json.result || !Array.isArray(json.result.posts)) {
+        if (!json.data || !Array.isArray(json.data.posts)) {
             return [];
         }
 
-        let posts = json.result.posts.map(post => ({
+        let posts = json.data.posts.map(post => ({
             number: post.id,
             title: post.title,
             category: post.category,

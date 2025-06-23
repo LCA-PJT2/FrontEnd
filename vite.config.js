@@ -9,7 +9,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "http://ec2-13-125-34-183.ap-northeast-2.compute.amazonaws.com", // 백엔드 주소
+        target: "http://localhost:8081", // 백엔드 주소
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ""),
       },

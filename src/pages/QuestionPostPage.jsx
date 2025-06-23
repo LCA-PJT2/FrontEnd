@@ -27,7 +27,7 @@ function QuestionPostPage() {
     };
 
       postQuestion(postData).then((data)=>{
-        const postId = data.result.id;
+        const postId = data.data.id;
         
         alert("질문이 등록되었습니다.");
         navigate(`/comm/${postId}`);
