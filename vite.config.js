@@ -9,7 +9,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "http://localhost:8081", // 백엔드 주소
+        target: "http://localhost:30081", // 백엔드 주소
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ""),
       },
