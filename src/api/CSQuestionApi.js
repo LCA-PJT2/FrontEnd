@@ -1,7 +1,7 @@
 import axios from "axios";
 export const fetchQuestions = async (page = 1, category = "") => {
   const accessToken = localStorage.getItem("accessToken");
-  const res = await axios.get("/api/question/v1", {
+  const res = await axios.get("/api/api/question/v1", {
     params: {
       page: page,
       category: category || undefined,
@@ -17,7 +17,7 @@ export const fetchQuestions = async (page = 1, category = "") => {
 };
 
 export const fetchTodayQuestion = async () => {
-  const res = await axios.get("/api/question/v1/today");
+  const res = await axios.get("/api/api/question/v1/today");
   return res.data.result;
 };
 
