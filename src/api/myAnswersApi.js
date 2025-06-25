@@ -7,7 +7,7 @@ import axios from "axios";
  */
 export const fetchAnswers = async (page = 1, questionId) => {
   const accessToken = localStorage.getItem("accessToken");
-  const res = await axios.get("/api/answer", {
+  const res = await axios.get("/api/answer/v1", {
     params: {
       page,
       size: 10,

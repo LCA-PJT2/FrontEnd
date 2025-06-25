@@ -5,7 +5,7 @@ export const getAnswer = async (answerId) => {
   const accessToken = localStorage.getItem("accessToken");
 
   try {
-    const res = await axios.get(`/api/answer/${answerId}`, {
+    const res = await axios.get(`/api/answer/v1/${answerId}`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
@@ -23,7 +23,7 @@ export const requestFeedback = async (answerId) => {
   const accessToken = localStorage.getItem("accessToken");
   try {
     const res = await axios.post(
-      `/api/api/answers/${answerId}`,
+      `/api/answers/v1/ai/${answerId}`,
       {},
       {
         headers: {
@@ -47,7 +47,7 @@ export const editAnswer = async (answerId, content) => {
   console.log(content);
   try {
     const res = await axios.post(
-      `/api/answer/${answerId}/edit`,
+      `/api/answer/v1/update/${answerId}`,
       { csanswer_content: content },
       {
         headers: {
@@ -67,7 +67,7 @@ export const deleteAnswer = async (answerId) => {
   const accessToken = localStorage.getItem("accessToken");
   try {
     const res = await axios.post(
-      `/api/answer/${answerId}/delete`,{},
+      `/api/answer/v1/delete/${answerId}`,{},
       {
         headers: {
           "Content-Type": "application/json",
