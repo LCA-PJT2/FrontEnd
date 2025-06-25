@@ -22,7 +22,7 @@ export const fetchTodayQuestion = async () => {
 };
 
 export const fetchQuestionById = async (questionId) => {
-  const res = await axios.get(`/api/questions/v1/${questionId}`);
+  const res = await axios.get(`/api/api/question/v1/${questionId}`);
 
   return res.data.result;
 };

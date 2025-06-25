@@ -23,7 +23,7 @@ export const requestFeedback = async (answerId) => {
   const accessToken = localStorage.getItem("accessToken");
   try {
     const res = await axios.post(
-      `/api/api/answers/v1/ai/${answerId}`,
+      `/api/api/answer/v1/ai/${answerId}`,
       {},
       {
         headers: {
