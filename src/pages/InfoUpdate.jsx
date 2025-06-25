@@ -30,7 +30,7 @@ function InfoUpdate() {
   formData.append("nickname", nickname);
 
   if (newProfileimage) {
-    formData.append("newProfileimage", newProfileimage);
+    formData.append("profileimage", newProfileimage);
   }
 
   // 수정 완료 버튼 클릭 시 유저정보 post 후 유저 정보 페이지로 이동동

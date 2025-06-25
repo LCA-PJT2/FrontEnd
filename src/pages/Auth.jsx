@@ -122,10 +122,9 @@ function SignUpForm() {
     formData.append("password", password);
     formData.append("name", name);
     formData.append("nickname", nickname);
-    formData.append("role", "USER");
 
     if (profile_image) {
-      formData.append("image", profile_image);
+      formData.append("profileImage", profile_image);
     }
 
     try {
